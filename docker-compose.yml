@@ -1,0 +1,69 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:7.0
+    container_name: ${MONGO_CONTAINER_NAME:-mongodb}
+    restart: unless-stopped
+    environment:
+      # Root credentials
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD}
+      # Initial database name
+      MONGO_INITDB_DATABASE: ${MONGO_DATABASE}
+    ports:
+      - '${MONGO_PORT:-27017}:27017'
+    volumes:
+      # Persistent data storage
+      - mongodb_data:/data/db
+      # MongoDB configuration
+      - mongodb_config:/data/configdb
+      # Custom initialization script
+      - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+    networks:
+      - app-network
+    command:
+      - --auth
+      - --bind_ip_all
+      - --storageEngine=wiredTiger
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+
+  # Optional: MongoDB Express for database management UI
+  mongo-express:
+    image: mongo-express:1.0-20
+    container_name: ${MONGO_EXPRESS_CONTAINER_NAME:-mongo-express}
+    restart: unless-stopped
+    profiles:
+      - admin
+    ports:
+      - '${MONGO_EXPRESS_PORT:-8081}:8081'
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: ${MONGO_ROOT_USERNAME}
+      ME_CONFIG_MONGODB_ADMINPASSWORD: ${MONGO_ROOT_PASSWORD}
+      ME_CONFIG_MONGODB_URL: mongodb://${MONGO_ROOT_USERNAME}:${MONGO_ROOT_PASSWORD}@mongodb:27017/
+      ME_CONFIG_BASICAUTH_USERNAME: ${MONGO_EXPRESS_USERNAME:-admin}
+      ME_CONFIG_BASICAUTH_PASSWORD: ${MONGO_EXPRESS_PASSWORD}
+      ME_CONFIG_MONGODB_ENABLE_ADMIN: ${MONGO_EXPRESS_ENABLE_ADMIN:-true}
+    networks:
+      - app-network
+    depends_on:
+      mongodb:
+        condition: service_healthy
+
+volumes:
+  mongodb_data:
+    driver: local
+    name: ${MONGO_DATA_VOLUME:-mongodb_data}
+  mongodb_config:
+    driver: local
+    name: ${MONGO_CONFIG_VOLUME:-mongodb_config}
+
+networks:
+  app-network:
+    driver: bridge
+    name: ${NETWORK_NAME:-app-network}

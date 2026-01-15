@@ -1,9 +1,10 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { MongooseModule } from '@nestjs/mongoose';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { VideosModule } from './modules/videos/videos.module';
 import { appConfig } from './config/app.config';
+import { VideosModule } from './modules/videos/videos.module';
 
 @Module({
   imports: [
@@ -11,6 +12,13 @@ import { appConfig } from './config/app.config';
     ConfigModule.forRoot({
       isGlobal: true,
       load: [appConfig],
+    }),
+    MongooseModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: (configService: ConfigService) => ({
+        uri: configService.getOrThrow<string>('dbConnectionString'),
+      }),
+      inject: [ConfigService],
     }),
   ],
   controllers: [AppController],
