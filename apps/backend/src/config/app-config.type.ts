@@ -1,7 +1,3 @@
-type DatabaseConfig = {
-  connectionString: string;
-};
-
 export type AppConfig = {
   port: number;
   uploadsFolder: string;

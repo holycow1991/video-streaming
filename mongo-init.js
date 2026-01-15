@@ -1,3 +1,4 @@
+/* eslint-disable no-undef */
 // MongoDB Initialization Script
 // This script runs automatically when MongoDB container starts for the first time
 // Place this file in the root directory of your project: ./mongo-init.js
