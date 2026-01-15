@@ -11,6 +11,9 @@ services:
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD}
       # Initial database name
       MONGO_INITDB_DATABASE: ${MONGO_DATABASE}
+      # Application user credentials (used by mongo-init.js)
+      MONGO_APP_USERNAME: ${MONGO_APP_USERNAME}
+      MONGO_APP_PASSWORD: ${MONGO_APP_PASSWORD}
     ports:
       - '${MONGO_PORT:-27017}:27017'
     volumes:
